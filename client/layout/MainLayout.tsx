@@ -11,19 +11,25 @@ import styled from "styled-components";
 const StyledMainLayout = styled.div`
   height: 100vh;
   display: flex;
+  position: relative;
+  overflow: hidden;
 `;
 const StyledAsideContainer = styled.aside`
   width: 300px;
+  border: 1px solid #dbdbdb;
+  background: #f3f4f6;
+  position: sticky;
+  top: 0;
+  left: 0;
+
   .list-container {
     display: flex;
     height: 100%;
     flex-direction: column;
     overflow-y: auto;
-    background: #f3f4f6;
     padding: 16px 12px;
     box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1),
       0 4px 6px -4px rgb(0 0 0 / 0.1);
-
     .list {
       margin-top: 0.5rem;
       .list-item {
@@ -54,8 +60,25 @@ const StyledAsideContainer = styled.aside`
 `;
 const StyledMainContainer = styled.main`
   height: 100%;
-  padding: 16px 12px;
   flex: 1;
+  position: relative;
+  overflow-y: auto;
+`;
+const StyledHeader = styled.div`
+  width: 100%;
+  height: 56px;
+  background: #f3f4f6;
+  display: flex;
+  align-items: center;
+
+  .header-content {
+    font-weight: 600;
+    font-size: 20px;
+    margin-left: 20px;
+  }
+`;
+const StyledMainContent = styled.div`
+  padding: 16px 12px;
 `;
 const MainLayout = ({ children }: { children?: ReactNode }) => {
   return (
@@ -98,7 +121,12 @@ const MainLayout = ({ children }: { children?: ReactNode }) => {
           </ul>
         </div>
       </StyledAsideContainer>
-      <StyledMainContainer>{children}</StyledMainContainer>
+      <StyledMainContainer>
+        <StyledHeader>
+          <div className="header-content">Nhập hoá đơn</div>
+        </StyledHeader>
+        <StyledMainContent>{children}</StyledMainContent>
+      </StyledMainContainer>
     </StyledMainLayout>
   );
 };
