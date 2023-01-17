@@ -6,6 +6,7 @@ import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import { useEffect, useState } from "react";
 import FormInputNoControl from "@/components/form/FormInputNoControl";
 import StockRow from "@/components/form/StockRow";
+import { IStock } from "@/types";
 const StyledFormContainer = styled.form`
   width: 100%;
   max-width: 1000px;
@@ -34,11 +35,7 @@ const StyledFormContainer = styled.form`
     text-align: center;
   }
 `;
-interface IStock {
-  stockName: string;
-  stockPrice: number;
-  stockAmount: number;
-}
+
 const index = () => {
   const {
     handleSubmit,
@@ -50,13 +47,19 @@ const index = () => {
   const [stocks, setStocks] = useState<IStock[]>([]);
   const [defaultNumber, setDefaultNumber] = useState(3);
   const [buyDate, setBuyDate] = useState<Date>(new Date());
+  const [totalPrice, setTotalPrice] = useState(0);
   const onSubmitHandler = (data: any) => {
-    console.log({ ...data, buy_date: buyDate.toISOString() });
+    console.log({
+      ...data,
+      invoice_pay: data.invoice_pay * 1000,
+      buy_date: buyDate.toISOString(),
+      stocks: stocks,
+      invoiceTotal: totalPrice,
+    });
   };
   useEffect(() => {
-    console.log(stocks);
+    setTotalPrice(stocks.reduce((prev, curr) => prev + curr.stockTotal, 0));
   }, [stocks]);
-
   return (
     <MainLayout>
       <Head>
@@ -83,6 +86,7 @@ const index = () => {
 
         <StockRow setStocks={setStocks} stocks={stocks} index={0} />
         <StockRow setStocks={setStocks} stocks={stocks} index={1} />
+        <div className="row-container">Tổng tiền hoá đơn: {totalPrice}</div>
         <div className="row-container">
           <FormInput
             control={control}
