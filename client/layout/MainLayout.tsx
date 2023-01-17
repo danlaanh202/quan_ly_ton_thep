@@ -5,7 +5,7 @@ import {
 } from "@ant-design/icons";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import styled from "styled-components";
 
 const StyledMainLayout = styled.div`
@@ -42,7 +42,7 @@ const StyledAsideContainer = styled.aside`
         font-weight: 600;
         cursor: pointer;
         :hover {
-          background: #d1d5db;
+          background: #ebeef1;
         }
         .icon {
           margin: 0 12px;
@@ -54,6 +54,9 @@ const StyledAsideContainer = styled.aside`
       }
       .active {
         background: #d1d5db;
+        :hover {
+          background: #d1d5db;
+        }
       }
     }
   }
@@ -81,13 +84,20 @@ const StyledMainContent = styled.div`
   padding: 16px 12px;
 `;
 const MainLayout = ({ children }: { children?: ReactNode }) => {
+  const router = useRouter();
+  const [activeId, setActiveId] = useState(0);
+  useEffect(() => {
+    if (router.asPath.split("/").includes("nhap_hoa_don")) {
+      setActiveId(1);
+    }
+  }, [router]);
   return (
     <StyledMainLayout>
       <StyledAsideContainer aria-label="Side bar">
         <div className="list-container">
           <ul className="list">
             <Link href="/">
-              <li className="list-item">
+              <li className={`list-item ${activeId === 0 && "active"}`}>
                 <div className="icon">
                   <HomeOutlined />
                 </div>
@@ -95,7 +105,7 @@ const MainLayout = ({ children }: { children?: ReactNode }) => {
               </li>
             </Link>
             <Link href="/nhap_hoa_don">
-              <li className="list-item">
+              <li className={`list-item ${activeId === 1 && "active"}`}>
                 <div className="icon">
                   <FileAddOutlined />
                 </div>

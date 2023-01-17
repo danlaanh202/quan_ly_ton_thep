@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import FormInputNoControl from "@/components/form/FormInputNoControl";
 import StockRow from "@/components/form/StockRow";
 import { IStock } from "@/types";
+import { PlusCircleOutlined } from "@ant-design/icons";
 const StyledFormContainer = styled.form`
   width: 100%;
   max-width: 1000px;
@@ -14,9 +15,28 @@ const StyledFormContainer = styled.form`
   .row-container {
     display: flex;
     gap: 40px;
-
     margin: 0 8px 12px;
     align-items: center;
+  }
+  .icon-container {
+    justify-content: center;
+    cursor: pointer;
+    font-size: 20px;
+    .add-btn {
+      border: none;
+      background: #1f28af;
+      padding: 8px 20px;
+      display: flex;
+      align-items: center;
+      color: white;
+      cursor: pointer;
+      border-radius: 8px;
+      svg {
+        font-size: 26px;
+        color: white;
+        margin-right: 8px;
+      }
+    }
   }
   .hoadon-title {
     font-size: 24px;
@@ -83,9 +103,24 @@ const index = () => {
           />
         </div>
         <div className="hoadon-title">Hoá đơn bán hàng</div>
+        {new Array(defaultNumber).fill(0).map((item, index) => (
+          <StockRow
+            key={index}
+            setStocks={setStocks}
+            stocks={stocks}
+            index={index}
+          />
+        ))}
+        <div className="row-container icon-container">
+          <button
+            onClick={() => setDefaultNumber((prev) => prev + 1)}
+            type="button"
+            className="add-btn"
+          >
+            <PlusCircleOutlined /> Thêm hàng hoá
+          </button>
+        </div>
 
-        <StockRow setStocks={setStocks} stocks={stocks} index={0} />
-        <StockRow setStocks={setStocks} stocks={stocks} index={1} />
         <div className="row-container">Tổng tiền hoá đơn: {totalPrice}</div>
         <div className="row-container">
           <FormInput
@@ -110,7 +145,9 @@ const index = () => {
             type="textarea"
           />
         </div>
-        <button className="submit-btn">Lưu hoá đơn</button>
+        <button type="submit" className="submit-btn">
+          Lưu hoá đơn
+        </button>
       </StyledFormContainer>
     </MainLayout>
   );
