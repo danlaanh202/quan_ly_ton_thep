@@ -1,22 +1,28 @@
 import React, { useState } from "react";
 import { Form, Input, InputNumber, Popconfirm, Table, Typography } from "antd";
+import { IStock } from "@/types";
+import styled from "styled-components";
+import InvoiceItemsTable from "./InvoiceItemsTable";
+import { easyReadMoney } from "@/utils/convert";
 
 interface Item {
   key: React.Key;
-  stockName: string;
-  stockAmount: number;
-  stockPrice: number;
-  stockTotal: number;
+  name: string;
+  phone_number: number;
+  address: string;
+  buy_total: number;
+  debt_remain: number;
 }
 
 const originData: Item[] = [];
-for (let i = 0; i < 3; i++) {
+for (let i = 0; i < 100; i++) {
   originData.push({
-    key: `${i}`,
-    stockName: "Hàng Việt Nam",
-    stockAmount: 20,
-    stockPrice: 13,
-    stockTotal: 2222,
+    key: i,
+    name: `Edrward ${i}`,
+    phone_number: 8127322340,
+    address: `London Park no. ${i}`,
+    buy_total: 20000,
+    debt_remain: 20000,
   });
 }
 interface EditableCellProps extends React.HTMLAttributes<HTMLElement> {
@@ -63,7 +69,7 @@ const EditableCell: React.FC<EditableCellProps> = ({
   );
 };
 
-const InvoiceItemsTable: React.FC = () => {
+const InvoiceListTable: React.FC = () => {
   const [form] = Form.useForm();
   const [data, setData] = useState(originData);
   const [editingKey, setEditingKey] = useState("");
@@ -74,7 +80,6 @@ const InvoiceItemsTable: React.FC = () => {
     form.setFieldsValue({ name: "", age: "", address: "", ...record });
     setEditingKey(record.key as string);
   };
-
   const cancel = () => {
     setEditingKey("");
   };
@@ -108,62 +113,44 @@ const InvoiceItemsTable: React.FC = () => {
   };
   const columns = [
     {
-      title: "Tên hàng hoá",
-      dataIndex: "stockName",
+      title: "Tên khách hàng",
+      dataIndex: "name",
       width: "300px",
-      editable: true,
     },
     {
-      title: "Số lượng hàng hoá",
-      dataIndex: "stockAmount",
+      title: "Số điện thoại",
+      dataIndex: "phone_number",
       width: "300px",
-      editable: true,
     },
     {
-      title: "Đơn giá ",
-      dataIndex: "stockPrice",
+      title: "Địa chỉ",
+      dataIndex: "address",
       width: "500px",
-      editable: true,
     },
     {
-      title: "Thành tiền",
-      dataIndex: "stockTotal",
-      width: "300px",
-      editable: true,
+      title: "Tổng số tiền mua",
+      dataIndex: "buy_total",
+      width: "200px",
+      render: (_: any, record: Item) => easyReadMoney(record.buy_total),
+    },
+    {
+      title: "Tiền nợ còn lại",
+      dataIndex: "debt_remain",
+      width: "200px",
+      render: (_: any, record: Item) => easyReadMoney(record.debt_remain),
     },
     {
       title: "Hành Động",
       dataIndex: "operation",
       width: "300px",
       render: (_: any, record: Item) => {
-        const editable = isEditing(record);
-        return editable ? (
-          <span>
-            <Typography.Link
-              onClick={() => save(record.key)}
-              style={{ marginRight: 8 }}
-            >
-              Lưu lại
-            </Typography.Link>
-            <Popconfirm title="Bạn muốn huỷ?" onConfirm={cancel}>
-              <a>Huỷ</a>
-            </Popconfirm>
-          </span>
-        ) : (
-          <>
-            <Typography.Link
-              disabled={editingKey !== ""}
-              onClick={() => edit(record)}
-            >
-              Sửa
-            </Typography.Link>
-            <Popconfirm
-              title="Sure to delete?"
-              onConfirm={() => handleDelete(record.key)}
-            >
-              <a style={{ color: "red", marginLeft: "8px" }}>Delete</a>
-            </Popconfirm>
-          </>
+        return (
+          <Popconfirm
+            title="Chắc chắn xoá?"
+            onConfirm={() => handleDelete(record.key)}
+          >
+            <a style={{ color: "red", marginLeft: "8px" }}>Xoá</a>
+          </Popconfirm>
         );
       },
     },
@@ -193,14 +180,46 @@ const InvoiceItemsTable: React.FC = () => {
             cell: EditableCell,
           },
         }}
-        pagination={false}
         bordered
         dataSource={data}
         columns={mergedColumns}
         rowClassName="editable-row"
+        pagination={{
+          onChange: cancel,
+        }}
+        expandable={{
+          expandedRowRender: (record) => (
+            <StyledExpandableContainer>
+              <InvoiceItemsTable />
+              <div className="exp-item">
+                <div className="exp-item-title">Ngày mua:</div>
+                <p className="exp-item-content">{record.buy_date as string}</p>
+              </div>
+              <div className="exp-item">
+                <div className="exp-item-title">Ghi chú:</div>
+                <p className="exp-item-content">{record.invoice_description}</p>
+              </div>
+            </StyledExpandableContainer>
+          ),
+          rowExpandable: (record) => record.name !== "Not Expandable",
+        }}
       />
     </Form>
   );
 };
 
-export default InvoiceItemsTable;
+export default InvoiceListTable;
+
+// Bảng mở rộng sẽ là danh sách hoá đơn của người trên
+const StyledExpandableContainer = styled.div`
+  margin: 12px 0;
+  .exp-item {
+    margin-top: 12px;
+    &-title {
+      font-weight: 600;
+    }
+    &-content {
+      margin-left: 8px;
+    }
+  }
+`;

@@ -91,6 +91,8 @@ const MainLayout = ({ children }: { children?: ReactNode }) => {
       setActiveId(1);
     } else if (router.asPath.split("/").includes("danh_sach_hoa_don")) {
       setActiveId(2);
+    } else if (router.asPath.split("/").includes("danh_sach_no")) {
+      setActiveId(3);
     }
   }, [router]);
   return (
@@ -122,7 +124,7 @@ const MainLayout = ({ children }: { children?: ReactNode }) => {
                 <span className="content">Danh sách hoá đơn</span>
               </li>
             </Link>
-            <Link href="/">
+            <Link href="/danh_sach_no">
               <li className={`list-item ${activeId === 3 && "active"}`}>
                 <div className="icon">
                   <UnorderedListOutlined />

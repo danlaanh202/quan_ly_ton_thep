@@ -3,6 +3,7 @@ import { Form, Input, InputNumber, Popconfirm, Table, Typography } from "antd";
 import { IStock } from "@/types";
 import styled from "styled-components";
 import InvoiceItemsTable from "./InvoiceItemsTable";
+import { easyReadMoney } from "@/utils/convert";
 
 interface Item {
   key: React.Key;
@@ -90,7 +91,7 @@ const InvoiceListTable: React.FC = () => {
 
   const edit = (record: Partial<Item> & { key: React.Key }) => {
     form.setFieldsValue({ name: "", age: "", address: "", ...record });
-    setEditingKey(record.key);
+    setEditingKey(record.key as string);
   };
 
   const cancel = () => {
@@ -120,7 +121,10 @@ const InvoiceListTable: React.FC = () => {
       console.log("Validate Failed:", errInfo);
     }
   };
-
+  const handleDelete = (key: React.Key) => {
+    const newData = data.filter((item) => item.key !== key);
+    setData(newData);
+  };
   const columns = [
     {
       title: "Tên khách hàng",
@@ -145,12 +149,14 @@ const InvoiceListTable: React.FC = () => {
       dataIndex: "invoice_total",
       width: "300px",
       editable: true,
+      render: (_: any, record: Item) => easyReadMoney(record.invoice_total),
     },
     {
       title: "Số tiền trả",
       dataIndex: "invoice_pay",
       width: "300px",
       editable: true,
+      render: (_: any, record: Item) => easyReadMoney(record.invoice_pay),
     },
     {
       title: "Hành Động",
@@ -171,12 +177,20 @@ const InvoiceListTable: React.FC = () => {
             </Popconfirm>
           </span>
         ) : (
-          <Typography.Link
-            disabled={editingKey !== ""}
-            onClick={() => edit(record)}
-          >
-            Sửa
-          </Typography.Link>
+          <>
+            <Typography.Link
+              disabled={editingKey !== ""}
+              onClick={() => edit(record)}
+            >
+              Sửa
+            </Typography.Link>
+            <Popconfirm
+              title="Sure to delete?"
+              onConfirm={() => handleDelete(record.key)}
+            >
+              <a style={{ color: "red", marginLeft: "8px" }}>Delete</a>
+            </Popconfirm>
+          </>
         );
       },
     },

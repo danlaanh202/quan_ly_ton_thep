@@ -8,6 +8,7 @@ import FormInputNoControl from "@/components/form/FormInputNoControl";
 import StockRow from "@/components/form/StockRow";
 import { IStock } from "@/types";
 import { PlusCircleOutlined } from "@ant-design/icons";
+import { easyReadMoney } from "@/utils/convert";
 const StyledFormContainer = styled.form`
   width: 100%;
   max-width: 1000px;
@@ -74,10 +75,10 @@ const index = () => {
   const onSubmitHandler = (data: any) => {
     console.log({
       ...data,
-      invoice_pay: data.invoice_pay * 1000,
-      buy_date: buyDate.toISOString(),
-      stocks: stocks,
-      invoiceTotal: totalPrice,
+      so_tien_tra: data.so_tien_tra * 1000,
+      ngay_mua: buyDate.toISOString(),
+      hang_hoa: stocks,
+      tong_hoa_don: totalPrice,
     });
   };
   useEffect(() => {
@@ -97,12 +98,12 @@ const index = () => {
           <FormInput
             control={control}
             labelString="Số điện thoại"
-            inputId="phone_number"
+            inputId="so_dien_thoai"
           />
           <FormInput
             control={control}
             labelString="Địa chỉ"
-            inputId="address"
+            inputId="dia_chi"
           />
         </div>
         <div className="hoadon-title">Hoá đơn bán hàng</div>
@@ -125,19 +126,19 @@ const index = () => {
         </div>
 
         <div className="row-container total">
-          Tổng tiền hoá đơn: {totalPrice}
+          Tổng tiền hoá đơn: {easyReadMoney(totalPrice)}
         </div>
         <div className="row-container">
           <FormInput
             control={control}
             labelString="Số tiền khách trả (Nghìn đồng)"
-            inputId="invoice_pay"
+            inputId="so_tien_tra"
           />
           <FormInput
             control={control}
             labelString="Ngày mua"
             type="date"
-            inputId="buy_date"
+            inputId="ngay_mua"
             setOuterDate={setBuyDate}
             outerDate={buyDate}
           />
@@ -146,7 +147,7 @@ const index = () => {
           <FormInput
             control={control}
             labelString="Ghi chú"
-            inputId="invoice_description"
+            inputId="ghi_chu"
             type="textarea"
           />
         </div>
