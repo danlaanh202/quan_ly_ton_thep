@@ -78,11 +78,11 @@ const index = () => {
       so_tien_tra: data.so_tien_tra * 1000,
       ngay_mua: buyDate.toISOString(),
       hang_hoa: stocks,
-      tong_hoa_don: totalPrice,
+      tong_tien: totalPrice,
     });
   };
   useEffect(() => {
-    setTotalPrice(stocks.reduce((prev, curr) => prev + curr.stockTotal, 0));
+    setTotalPrice(stocks.reduce((prev, curr) => prev + curr.tong_tien, 0));
   }, [stocks]);
   return (
     <MainLayout>
@@ -94,7 +94,11 @@ const index = () => {
       >
         <div className="hoadon-title">Thông tin người mua hàng</div>
         <div className="row-container">
-          <FormInput control={control} labelString="Tên" inputId="name" />
+          <FormInput
+            control={control}
+            labelString="Tên khách hàng"
+            inputId="ten_khach_hang"
+          />
           <FormInput
             control={control}
             labelString="Số điện thoại"

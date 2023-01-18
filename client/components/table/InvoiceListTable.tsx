@@ -1,43 +1,17 @@
 import React, { useState } from "react";
 import { Form, Input, InputNumber, Popconfirm, Table, Typography } from "antd";
-import { IStock } from "@/types";
+import { IInvoiceVar, IStock } from "@/types";
 import styled from "styled-components";
 import InvoiceItemsTable from "./InvoiceItemsTable";
 import { easyReadMoney } from "@/utils/convert";
+import { useQuery } from "react-query";
+import { publicRequest } from "@/utils/callApi";
+import { format } from "date-fns";
 
-interface Item {
+interface Item extends IInvoiceVar {
   key: React.Key;
-  name: string;
-  phone_number: number;
-  address: string;
-  invoice_pay: number;
-  invoice_description: string;
-  buy_date: Date | string;
-  invoice_total: number;
-  stocks?: IStock[];
 }
 
-const originData: Item[] = [];
-for (let i = 0; i < 100; i++) {
-  originData.push({
-    key: i,
-    name: `Edrward ${i}`,
-    phone_number: 8127322340,
-    address: `London Park no. ${i}`,
-    invoice_pay: i,
-    invoice_description: "ccc",
-    buy_date: "ccc",
-    invoice_total: 20000,
-    stocks: [
-      {
-        stockName: "Hàng Việt Nam",
-        stockAmount: 20,
-        stockPrice: 13,
-        stockTotal: 2222,
-      },
-    ],
-  });
-}
 interface EditableCellProps extends React.HTMLAttributes<HTMLElement> {
   editing: boolean;
   dataIndex: string;
@@ -84,13 +58,11 @@ const EditableCell: React.FC<EditableCellProps> = ({
 
 const InvoiceListTable: React.FC = () => {
   const [form] = Form.useForm();
-  const [data, setData] = useState(originData);
+  // const [data, setData] = useState(originData);
   const [editingKey, setEditingKey] = useState("");
-
   const isEditing = (record: Item) => record.key === editingKey;
-
   const edit = (record: Partial<Item> & { key: React.Key }) => {
-    form.setFieldsValue({ name: "", age: "", address: "", ...record });
+    form.setFieldsValue({ name: "", age: "", dia_chi: "", ...record });
     setEditingKey(record.key as string);
   };
 
@@ -110,11 +82,11 @@ const InvoiceListTable: React.FC = () => {
           ...item,
           ...row,
         });
-        setData(newData);
+        // setData(newData);
         setEditingKey("");
       } else {
         newData.push(row);
-        setData(newData);
+        // setData(newData);
         setEditingKey("");
       }
     } catch (errInfo) {
@@ -123,40 +95,43 @@ const InvoiceListTable: React.FC = () => {
   };
   const handleDelete = (key: React.Key) => {
     const newData = data.filter((item) => item.key !== key);
-    setData(newData);
+    // setData(newData);
   };
   const columns = [
     {
       title: "Tên khách hàng",
-      dataIndex: "name",
+      dataIndex: ["khach_hang", "ten_khach_hang"],
       width: "300px",
       editable: true,
+      // render: (_: any, record: Item) => record.khach_hang.ten_khach_hang,
     },
     {
       title: "Số điện thoại",
-      dataIndex: "phone_number",
+      dataIndex: ["khach_hang", "so_dien_thoai"],
       width: "300px",
       editable: true,
+      // render: (_: any, record: Item) => record.khach_hang.so_dien_thoai,
     },
     {
       title: "Địa chỉ",
-      dataIndex: "address",
+      dataIndex: ["khach_hang", "dia_chi"],
       width: "500px",
       editable: true,
+      // render: (_: any, record: Item) => record.khach_hang.dia_chi,
     },
     {
       title: "Tổng hoá đơn",
-      dataIndex: "invoice_total",
+      dataIndex: "tong_tien",
       width: "300px",
-      editable: true,
-      render: (_: any, record: Item) => easyReadMoney(record.invoice_total),
+      // editable: true,
+      render: (_: any, record: Item) => easyReadMoney(record.tong_tien),
     },
     {
       title: "Số tiền trả",
-      dataIndex: "invoice_pay",
+      dataIndex: "so_tien_tra",
       width: "300px",
       editable: true,
-      render: (_: any, record: Item) => easyReadMoney(record.invoice_pay),
+      render: (_: any, record: Item) => easyReadMoney(record.so_tien_tra),
     },
     {
       title: "Hành Động",
@@ -185,10 +160,10 @@ const InvoiceListTable: React.FC = () => {
               Sửa
             </Typography.Link>
             <Popconfirm
-              title="Sure to delete?"
+              title="Chắc chắn xoá?"
               onConfirm={() => handleDelete(record.key)}
             >
-              <a style={{ color: "red", marginLeft: "8px" }}>Delete</a>
+              <a style={{ color: "red", marginLeft: "8px" }}>Xoá</a>
             </Popconfirm>
           </>
         );
@@ -211,7 +186,14 @@ const InvoiceListTable: React.FC = () => {
       }),
     };
   });
-
+  const { isLoading, isError, isSuccess, data } = useQuery(
+    "get_invoices",
+    async () =>
+      await publicRequest.get("/invoice/get").then((res) => {
+        console.log(res.data);
+        return res.data;
+      })
+  );
   return (
     <Form form={form} component={false}>
       <Table
@@ -227,17 +209,20 @@ const InvoiceListTable: React.FC = () => {
         pagination={{
           onChange: cancel,
         }}
+        rowKey="_id"
         expandable={{
           expandedRowRender: (record) => (
             <StyledExpandableContainer>
-              <InvoiceItemsTable />
+              <InvoiceItemsTable originData={record.hang_hoa as IStock[]} />
               <div className="exp-item">
                 <div className="exp-item-title">Ngày mua:</div>
-                <p className="exp-item-content">{record.buy_date as string}</p>
+                <p className="exp-item-content">
+                  {format(new Date(record.ngay_mua as string), "dd/MM/yyyy")}
+                </p>
               </div>
               <div className="exp-item">
                 <div className="exp-item-title">Ghi chú:</div>
-                <p className="exp-item-content">{record.invoice_description}</p>
+                <p className="exp-item-content">{record.ghi_chu}</p>
               </div>
             </StyledExpandableContainer>
           ),

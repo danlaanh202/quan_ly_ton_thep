@@ -1,6 +1,9 @@
 const express = require("express");
 const route = require("./src/routes");
+const bodyParser = require("body-parser");
+const mongoose = require("mongoose");
 require("dotenv").config();
+
 const app = express();
 app.use(function (req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
@@ -24,8 +27,15 @@ app.use(
 );
 app.use(express.json());
 
+mongoose
+  .connect("mongodb://127.0.0.1:27017/hoa_don")
+  .then(() => {
+    console.log("connected");
+  })
+  .catch((err) => {
+    console.log("can't connect");
+  });
+
 route(app);
 
-app.listen(3000 || process.env.PORT, () =>
-  console.log("listening on port " + process.env.PORT)
-);
+app.listen(4000, () => console.log("listening on port " + 4000));

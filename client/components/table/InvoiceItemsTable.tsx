@@ -1,24 +1,21 @@
 import React, { useState } from "react";
 import { Form, Input, InputNumber, Popconfirm, Table, Typography } from "antd";
+import { IStock } from "@/types";
+import { easyReadMoney } from "@/utils/convert";
 
-interface Item {
+interface Item extends IStock {
   key: React.Key;
-  stockName: string;
-  stockAmount: number;
-  stockPrice: number;
-  stockTotal: number;
 }
 
-const originData: Item[] = [];
-for (let i = 0; i < 3; i++) {
-  originData.push({
-    key: `${i}`,
-    stockName: "Hàng Việt Nam",
-    stockAmount: 20,
-    stockPrice: 13,
-    stockTotal: 2222,
-  });
-}
+// const originData: Item[] = [];
+// for (let i = 0; i < 3; i++) {
+//   originData.push({
+//     key: `${i}`,
+//     ten_mat_hang: "Hàng Việt Nam",
+//     so_luong: 20,
+//     don_gia: 13,
+//   });
+// }
 interface EditableCellProps extends React.HTMLAttributes<HTMLElement> {
   editing: boolean;
   dataIndex: string;
@@ -63,13 +60,15 @@ const EditableCell: React.FC<EditableCellProps> = ({
   );
 };
 
-const InvoiceItemsTable: React.FC = () => {
+const InvoiceItemsTable: React.FC = ({
+  originData,
+}: {
+  originData: IStock[];
+}) => {
   const [form] = Form.useForm();
   const [data, setData] = useState(originData);
   const [editingKey, setEditingKey] = useState("");
-
   const isEditing = (record: Item) => record.key === editingKey;
-
   const edit = (record: Partial<Item> & { key: React.Key }) => {
     form.setFieldsValue({ name: "", age: "", address: "", ...record });
     setEditingKey(record.key as string);
@@ -109,27 +108,30 @@ const InvoiceItemsTable: React.FC = () => {
   const columns = [
     {
       title: "Tên hàng hoá",
-      dataIndex: "stockName",
+      dataIndex: "ten_mat_hang",
       width: "300px",
       editable: true,
     },
     {
       title: "Số lượng hàng hoá",
-      dataIndex: "stockAmount",
+      dataIndex: "so_luong",
       width: "300px",
       editable: true,
     },
     {
       title: "Đơn giá ",
-      dataIndex: "stockPrice",
+      dataIndex: "don_gia",
       width: "500px",
       editable: true,
+      render: (_: any, record: Item) => easyReadMoney(record.don_gia),
     },
     {
       title: "Thành tiền",
       dataIndex: "stockTotal",
       width: "300px",
       editable: true,
+      render: (_: any, record: Item) =>
+        easyReadMoney(record.don_gia * record.so_luong),
     },
     {
       title: "Hành Động",
@@ -198,6 +200,7 @@ const InvoiceItemsTable: React.FC = () => {
         dataSource={data}
         columns={mergedColumns}
         rowClassName="editable-row"
+        rowKey="_id"
       />
     </Form>
   );
