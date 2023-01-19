@@ -16,6 +16,19 @@ class PersonController {
       return res.status(500).json(error);
     }
   }
+  async getPeople(req, res) {
+    try {
+      const findedPeople = await PersonModel.find({
+        ten_khach_hang: {
+          $regex: req.query?.ten_khach_hang,
+          $options: "i",
+        },
+      });
+      return res.status(200).json(findedPeople);
+    } catch (error) {
+      return res.status(500).json(error);
+    }
+  }
 }
 
 module.exports = new PersonController();

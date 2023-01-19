@@ -31,25 +31,25 @@ const StockRow = ({
   index: number;
 }) => {
   const [stock, setStock] = useState<IStock>({
-    stockName: "",
-    stockAmount: 0,
-    stockPrice: 0,
-    stockTotal: 0,
+    ten_mat_hang: "",
+    so_luong: 0,
+    don_gia: 0,
+    thanh_tien: 0,
   });
 
   const handleName = (e: ChangeEvent<HTMLInputElement>) => {
     setStock((prev: IStock) => {
-      return { ...prev, stockName: e.target.value as string };
+      return { ...prev, ten_mat_hang: e.target.value as string };
     });
   };
   const handlePrice = (e: ChangeEvent<HTMLInputElement>) => {
     setStock((prev: IStock) => {
-      return { ...prev, stockPrice: Number(e.target.value) };
+      return { ...prev, don_gia: Number(e.target.value) };
     });
   };
   const handleAmount = (e: ChangeEvent<HTMLInputElement>) => {
     setStock((prev: IStock) => {
-      return { ...prev, stockAmount: Number(e.target.value) };
+      return { ...prev, so_luong: Number(e.target.value) };
     });
   };
   useEffect(() => {
@@ -63,10 +63,10 @@ const StockRow = ({
     setStock((prev: IStock) => {
       return {
         ...prev,
-        stockTotal: prev.stockAmount * prev.stockPrice * 1000,
+        thanh_tien: prev.so_luong * prev.don_gia * 1000,
       };
     });
-  }, [stock.stockPrice, stock.stockAmount]);
+  }, [stock.don_gia, stock.so_luong]);
   return (
     <StyledStockContainer>
       <div className="row-container">
@@ -83,7 +83,7 @@ const StockRow = ({
       </div>
       <div className="row-container">
         <div className="stock_total">
-          Thành tiền: {easyReadMoney(stock.stockTotal)}
+          Thành tiền: {easyReadMoney(stock.thanh_tien as number)}
         </div>
       </div>
     </StyledStockContainer>

@@ -37,7 +37,6 @@ const StyledAsideContainer = styled.aside`
         align-items: center;
         border-radius: 8px;
         padding: 8px;
-        /* color: #111827; */
         color: #374151;
         font-weight: 600;
         cursor: pointer;

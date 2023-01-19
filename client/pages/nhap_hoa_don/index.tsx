@@ -6,9 +6,11 @@ import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import { useEffect, useState } from "react";
 import FormInputNoControl from "@/components/form/FormInputNoControl";
 import StockRow from "@/components/form/StockRow";
-import { IStock } from "@/types";
+import { IPerson, IStock } from "@/types";
 import { PlusCircleOutlined } from "@ant-design/icons";
 import { easyReadMoney } from "@/utils/convert";
+import { getPeopleWithSearchQuery, publicRequest } from "@/utils/callApi";
+import _ from "lodash";
 const StyledFormContainer = styled.form`
   width: 100%;
   max-width: 1000px;
@@ -72,18 +74,60 @@ const index = () => {
   const [defaultNumber, setDefaultNumber] = useState(3);
   const [buyDate, setBuyDate] = useState<Date>(new Date());
   const [totalPrice, setTotalPrice] = useState(0);
-  const onSubmitHandler = (data: any) => {
+  const [searchPeople, setSearchPeople] = useState<IPerson[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectPerson, setSelectPerson] = useState<IPerson>();
+  const [phoneNumber, setPhoneNumber] = useState();
+  const [address, setAddress] = useState("");
+  const onSubmitHandler = async (data: any) => {
     console.log({
       ...data,
       so_tien_tra: data.so_tien_tra * 1000,
       ngay_mua: buyDate.toISOString(),
       hang_hoa: stocks,
       tong_tien: totalPrice,
+      ten_khach_hang: searchQuery,
+      so_dien_thoai: !_.isEmpty(selectPerson)
+        ? phoneNumber
+        : data.so_dien_thoai,
+      dia_chi: !_.isEmpty(selectPerson) ? address : data.dia_chi,
     });
+
+    try {
+      if (selectPerson?.ten_khach_hang !== searchQuery) {
+        await publicRequest
+          .post("/person/post", {
+            ten_khach_hang: searchQuery,
+            so_dien_thoai: !_.isEmpty(selectPerson)
+              ? phoneNumber
+              : data.so_dien_thoai,
+            dia_chi: !_.isEmpty(selectPerson) ? address : data.dia_chi,
+          })
+          .then((response) => console.log(response.data));
+      } else {
+        console.log("đã tồn tại");
+      }
+    } catch (error) {
+      console.log(error);
+    }
   };
   useEffect(() => {
-    setTotalPrice(stocks.reduce((prev, curr) => prev + curr.tong_tien, 0));
+    setTotalPrice(stocks.reduce((prev, curr) => prev + curr.thanh_tien, 0));
   }, [stocks]);
+  useEffect(() => {
+    if (searchQuery !== "")
+      getPeopleWithSearchQuery(searchQuery).then((res) =>
+        setSearchPeople(res.data)
+      );
+    if (searchQuery !== selectPerson?.ten_khach_hang) {
+      setSelectPerson({} as IPerson);
+    }
+  }, [searchQuery]);
+  useEffect(() => {
+    setPhoneNumber(selectPerson?.so_dien_thoai);
+    setAddress(selectPerson?.dia_chi);
+  }, [selectPerson]);
+
   return (
     <MainLayout>
       <Head>
@@ -98,16 +142,25 @@ const index = () => {
             control={control}
             labelString="Tên khách hàng"
             inputId="ten_khach_hang"
+            withSearch={true}
+            outerVal={searchQuery}
+            setOuterVal={setSearchQuery}
+            setSelectVal={setSelectPerson}
+            dropdownData={searchPeople}
           />
           <FormInput
             control={control}
             labelString="Số điện thoại"
             inputId="so_dien_thoai"
+            disabled={searchQuery === selectPerson?.ten_khach_hang}
+            disabledVal={selectPerson?.so_dien_thoai}
           />
           <FormInput
             control={control}
             labelString="Địa chỉ"
             inputId="dia_chi"
+            disabled={searchQuery === selectPerson?.ten_khach_hang}
+            disabledVal={selectPerson?.dia_chi}
           />
         </div>
         <div className="hoadon-title">Hoá đơn bán hàng</div>

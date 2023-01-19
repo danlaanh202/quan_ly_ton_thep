@@ -2,8 +2,11 @@ import { Input } from "antd";
 import styled from "styled-components";
 import ReactDatePicker from "react-datepicker";
 import { CalendarOutlined } from "@ant-design/icons";
-import { Dispatch, SetStateAction, useState } from "react";
+import { Dispatch, SetStateAction, useRef, useState } from "react";
 import { useController } from "react-hook-form";
+import InputDropdown from "./InputDropdown";
+import { IPerson } from "@/types";
+import { useOnClickOutside } from "@/hooks/useOnClickOutside";
 const { TextArea } = Input;
 
 const StyledFormInput = styled.div`
@@ -11,7 +14,6 @@ const StyledFormInput = styled.div`
   flex-direction: column;
   flex: 1;
   position: relative;
-
   .form-label {
     padding-bottom: 10px;
     margin-bottom: 4px;
@@ -36,6 +38,9 @@ const StyledFormInput = styled.div`
     }
     :focus {
       border-color: #4096ff;
+    }
+    :disabled {
+      cursor: not-allowed;
     }
   }
   .date-picker-container {
@@ -66,6 +71,23 @@ const StyledFormInput = styled.div`
       color: #d2c9cc;
     }
   }
+  .input-dropdown-container {
+    width: 100%;
+    display: flex;
+    position: relative;
+    .form-input {
+      width: 100%;
+    }
+    .dropdown-container {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 100%;
+      z-index: 100;
+      overflow-y: auto;
+      max-height: 300px;
+    }
+  }
 `;
 const FormInput = ({
   labelString,
@@ -75,6 +97,13 @@ const FormInput = ({
   control,
   setOuterDate,
   outerDate = new Date(),
+  withSearch = false,
+  outerVal,
+  setOuterVal,
+  dropdownData,
+  setSelectVal,
+  disabled = false,
+  disabledVal = "",
 }: {
   labelString: string;
   inputId: string;
@@ -83,19 +112,29 @@ const FormInput = ({
   control?: any;
   setOuterDate?: Dispatch<SetStateAction<Date>>;
   outerDate?: Date;
+  withSearch?: Boolean;
+  outerVal?: any;
+  setOuterVal?: Dispatch<SetStateAction<any>>;
+  dropdownData?: IPerson[];
+  setSelectVal?: Dispatch<SetStateAction<any>>;
+  disabled?: boolean;
+  disabledVal?: string | number;
 }) => {
   const { field } = useController({
     control: control,
     name: inputId,
     defaultValue: "",
   });
+  const ref = useRef();
+  const [showDropdown, setShowDropdown] = useState(false);
+  useOnClickOutside(ref, () => setShowDropdown(false));
 
   return (
     <StyledFormInput>
       <label className="form-label" htmlFor={inputId}>
         {labelString}
       </label>
-      {type === "text" && (
+      {type === "text" && !disabled && !withSearch && (
         <input
           className="form-input"
           type="text"
@@ -121,6 +160,43 @@ const FormInput = ({
           <div className="placeholder-icon">
             <CalendarOutlined />
           </div>
+        </div>
+      )}
+      {disabled && (
+        <input
+          className="form-input"
+          type="text"
+          id={inputId}
+          placeholder={placeholder}
+          value={disabledVal}
+          disabled={disabled}
+        />
+      )}
+      {withSearch && (
+        <div ref={ref} className="input-dropdown-container">
+          <input
+            onFocus={() => setShowDropdown(true)}
+            className="form-input"
+            type="text"
+            id={inputId}
+            placeholder={placeholder}
+            {...field}
+            value={outerVal}
+            onChange={(e) => {
+              if (setOuterVal) setOuterVal(e.target.value);
+            }}
+            autoComplete="off"
+          />
+          {showDropdown && (dropdownData as IPerson[])?.length > 0 && (
+            <div className="dropdown-container">
+              <InputDropdown
+                data={dropdownData as IPerson[]}
+                setShowDropdown={setShowDropdown}
+                setSelectVal={setSelectVal as Dispatch<any>}
+                setOuterQuery={setOuterVal as Dispatch<any>}
+              />
+            </div>
+          )}
         </div>
       )}
     </StyledFormInput>
