@@ -127,9 +127,8 @@ const InvoiceItemsTable: React.FC = ({
     },
     {
       title: "Thành tiền",
-      dataIndex: "stockTotal",
+      dataIndex: "thanh_tien",
       width: "300px",
-      editable: true,
       render: (_: any, record: Item) =>
         easyReadMoney(record.don_gia * record.so_luong),
     },
@@ -160,10 +159,10 @@ const InvoiceItemsTable: React.FC = ({
               Sửa
             </Typography.Link>
             <Popconfirm
-              title="Sure to delete?"
+              title="Chắc chắn xoá?"
               onConfirm={() => handleDelete(record.key)}
             >
-              <a style={{ color: "red", marginLeft: "8px" }}>Delete</a>
+              <a style={{ color: "red", marginLeft: "8px" }}>Xoá</a>
             </Popconfirm>
           </>
         );

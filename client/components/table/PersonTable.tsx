@@ -1,28 +1,26 @@
-import React, { useState } from "react";
+import React, { Dispatch, SetStateAction, useState } from "react";
 import { Form, Input, InputNumber, Popconfirm, Table, Typography } from "antd";
-import { IStock } from "@/types";
+import { IData, IPerson, IStock } from "@/types";
 import styled from "styled-components";
 import InvoiceItemsTable from "./InvoiceItemsTable";
 import { easyReadMoney } from "@/utils/convert";
+import InvoiceListTable from "./InvoiceListTable";
+import InvoicesChildListTable from "./InvoicesChildListTable";
 
-interface Item {
+interface Item extends IPerson {
   key: React.Key;
-  name: string;
-  phone_number: number;
-  address: string;
-  buy_total: number;
-  debt_remain: number;
 }
 
 const originData: Item[] = [];
 for (let i = 0; i < 100; i++) {
   originData.push({
     key: i,
-    name: `Edrward ${i}`,
-    phone_number: 8127322340,
-    address: `London Park no. ${i}`,
-    buy_total: 20000,
-    debt_remain: 20000,
+    _id: `abcxyz${i}`,
+    ten_khach_hang: `Edrward ${i}`,
+    so_dien_thoai: "0812732234",
+    dia_chi: `London Park no. ${i}`,
+    so_tien_no: 20000,
+    tong_tien_mua: 50000000,
   });
 }
 interface EditableCellProps extends React.HTMLAttributes<HTMLElement> {
@@ -69,15 +67,13 @@ const EditableCell: React.FC<EditableCellProps> = ({
   );
 };
 
-const InvoiceListTable: React.FC = () => {
+const PersonTable = ({ data, setData }: IData<IPerson[]>) => {
   const [form] = Form.useForm();
-  const [data, setData] = useState(originData);
+  // const [data, setData] = useState(originData);
   const [editingKey, setEditingKey] = useState("");
-
   const isEditing = (record: Item) => record.key === editingKey;
-
   const edit = (record: Partial<Item> & { key: React.Key }) => {
-    form.setFieldsValue({ name: "", age: "", address: "", ...record });
+    form.setFieldsValue({ name: "", age: "", dia_chi: "", ...record });
     setEditingKey(record.key as string);
   };
   const cancel = () => {
@@ -114,43 +110,78 @@ const InvoiceListTable: React.FC = () => {
   const columns = [
     {
       title: "Tên khách hàng",
-      dataIndex: "name",
+      dataIndex: "ten_khach_hang",
       width: "300px",
+      editable: true,
     },
     {
       title: "Số điện thoại",
-      dataIndex: "phone_number",
+      dataIndex: "so_dien_thoai",
       width: "300px",
+      editable: true,
     },
     {
       title: "Địa chỉ",
-      dataIndex: "address",
+      dataIndex: "dia_chi",
       width: "500px",
+      editable: true,
     },
     {
       title: "Tổng số tiền mua",
-      dataIndex: "buy_total",
+      dataIndex: "tong_tien_mua",
       width: "200px",
-      render: (_: any, record: Item) => easyReadMoney(record.buy_total),
+      render: (_: any, record: Item) =>
+        easyReadMoney(record.tong_tien_mua as number),
     },
     {
       title: "Tiền nợ còn lại",
-      dataIndex: "debt_remain",
+      dataIndex: "so_tien_no",
       width: "200px",
-      render: (_: any, record: Item) => easyReadMoney(record.debt_remain),
+      render: (_: any, record: Item) => (
+        <span
+          style={
+            (record.so_tien_no as number) > 0
+              ? { color: "#e2574c", fontWeight: 600 }
+              : { color: "#59ad6a", fontWeight: 600 }
+          }
+        >
+          {easyReadMoney(record.so_tien_no as number)}
+        </span>
+      ),
     },
     {
       title: "Hành Động",
       dataIndex: "operation",
       width: "300px",
       render: (_: any, record: Item) => {
-        return (
-          <Popconfirm
-            title="Chắc chắn xoá?"
-            onConfirm={() => handleDelete(record.key)}
-          >
-            <a style={{ color: "red", marginLeft: "8px" }}>Xoá</a>
-          </Popconfirm>
+        const editable = isEditing(record);
+        return editable ? (
+          <span>
+            <Typography.Link
+              onClick={() => save(record.key)}
+              style={{ marginRight: 8 }}
+            >
+              Lưu lại
+            </Typography.Link>
+            <Popconfirm title="Bạn muốn huỷ?" onConfirm={cancel}>
+              <a>Huỷ</a>
+            </Popconfirm>
+          </span>
+        ) : (
+          <>
+            <Typography.Link
+              disabled={editingKey !== ""}
+              onClick={() => edit(record)}
+            >
+              Sửa
+            </Typography.Link>
+            <Popconfirm
+              title="Chắc chắn xoá?"
+              onConfirm={() => handleDelete(record.key)}
+            >
+              <a style={{ color: "red", marginLeft: "8px" }}>Xoá</a>
+            </Popconfirm>
+          </>
         );
       },
     },
@@ -181,24 +212,17 @@ const InvoiceListTable: React.FC = () => {
           },
         }}
         bordered
-        dataSource={data}
+        dataSource={data as Item[]}
         columns={mergedColumns}
         rowClassName="editable-row"
         pagination={{
           onChange: cancel,
         }}
+        rowKey="_id"
         expandable={{
           expandedRowRender: (record) => (
             <StyledExpandableContainer>
-              <InvoiceItemsTable />
-              <div className="exp-item">
-                <div className="exp-item-title">Ngày mua:</div>
-                <p className="exp-item-content">{record.buy_date as string}</p>
-              </div>
-              <div className="exp-item">
-                <div className="exp-item-title">Ghi chú:</div>
-                <p className="exp-item-content">{record.invoice_description}</p>
-              </div>
+              <InvoicesChildListTable id={record._id} />
             </StyledExpandableContainer>
           ),
           rowExpandable: (record) => record.name !== "Not Expandable",
@@ -208,7 +232,7 @@ const InvoiceListTable: React.FC = () => {
   );
 };
 
-export default InvoiceListTable;
+export default PersonTable;
 
 // Bảng mở rộng sẽ là danh sách hoá đơn của người trên
 const StyledExpandableContainer = styled.div`

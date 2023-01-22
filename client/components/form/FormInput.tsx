@@ -2,14 +2,17 @@ import { Input } from "antd";
 import styled from "styled-components";
 import ReactDatePicker from "react-datepicker";
 import { CalendarOutlined } from "@ant-design/icons";
-import { Dispatch, SetStateAction, useRef, useState } from "react";
-import { useController } from "react-hook-form";
+import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
+import { FieldValues, useController, UseFormSetValue } from "react-hook-form";
 import InputDropdown from "./InputDropdown";
 import { IPerson } from "@/types";
 import { useOnClickOutside } from "@/hooks/useOnClickOutside";
 const { TextArea } = Input;
+interface IProps {
+  error: boolean;
+}
 
-const StyledFormInput = styled.div`
+const StyledFormInput = styled.div<IProps>`
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -29,7 +32,7 @@ const StyledFormInput = styled.div`
     background: white;
     border: none;
     outline: none;
-    border: 1px solid #dbdbdb;
+    border: 1px solid ${(props) => (props.error ? "#e5285d" : "#dbdbdb")};
     color: black;
     padding: 12px;
     border-radius: 4px;
@@ -104,6 +107,8 @@ const FormInput = ({
   setSelectVal,
   disabled = false,
   disabledVal = "",
+  error = false,
+  setValue,
 }: {
   labelString: string;
   inputId: string;
@@ -119,6 +124,8 @@ const FormInput = ({
   setSelectVal?: Dispatch<SetStateAction<any>>;
   disabled?: boolean;
   disabledVal?: string | number;
+  error?: boolean;
+  setValue?: UseFormSetValue<FieldValues>;
 }) => {
   const { field } = useController({
     control: control,
@@ -128,19 +135,24 @@ const FormInput = ({
   const ref = useRef();
   const [showDropdown, setShowDropdown] = useState(false);
   useOnClickOutside(ref, () => setShowDropdown(false));
-
+  useEffect(() => {
+    if (disabled && setValue) {
+      setValue(inputId, disabledVal);
+    }
+  }, [disabled]);
   return (
-    <StyledFormInput>
+    <StyledFormInput error={error}>
       <label className="form-label" htmlFor={inputId}>
         {labelString}
       </label>
-      {type === "text" && !disabled && !withSearch && (
+      {type === "text" && !withSearch && (
         <input
           className="form-input"
           type="text"
           id={inputId}
           placeholder={placeholder}
           {...field}
+          disabled={disabled}
         />
       )}
       {type === "textarea" && (
@@ -162,7 +174,7 @@ const FormInput = ({
           </div>
         </div>
       )}
-      {disabled && (
+      {/* {disabled && (
         <input
           className="form-input"
           type="text"
@@ -171,7 +183,7 @@ const FormInput = ({
           value={disabledVal}
           disabled={disabled}
         />
-      )}
+      )} */}
       {withSearch && (
         <div ref={ref} className="input-dropdown-container">
           <input

@@ -4,13 +4,15 @@ import Head from "next/head";
 import styled from "styled-components";
 import { FieldValues, SubmitHandler, useForm } from "react-hook-form";
 import { useEffect, useState } from "react";
-import FormInputNoControl from "@/components/form/FormInputNoControl";
 import StockRow from "@/components/form/StockRow";
 import { IPerson, IStock } from "@/types";
 import { PlusCircleOutlined } from "@ant-design/icons";
 import { easyReadMoney } from "@/utils/convert";
 import { getPeopleWithSearchQuery, publicRequest } from "@/utils/callApi";
 import _ from "lodash";
+import * as yup from "yup";
+import { yupResolver } from "@hookform/resolvers/yup";
+import Spinner from "@/components/loading/Spinner";
 const StyledFormContainer = styled.form`
   width: 100%;
   max-width: 1000px;
@@ -61,14 +63,21 @@ const StyledFormContainer = styled.form`
     text-align: center;
   }
 `;
-
+const schema = yup.object({
+  so_tien_tra: yup.number().required(),
+  ghi_chu: yup.string(),
+  dia_chi: yup.string().required(),
+});
 const index = () => {
   const {
     handleSubmit,
     control,
+    setError,
+    setValue,
     formState: { errors, isValid, isSubmitting },
   } = useForm({
     mode: "onChange",
+    resolver: yupResolver(schema),
   });
   const [stocks, setStocks] = useState<IStock[]>([]);
   const [defaultNumber, setDefaultNumber] = useState(3);
@@ -76,9 +85,29 @@ const index = () => {
   const [totalPrice, setTotalPrice] = useState(0);
   const [searchPeople, setSearchPeople] = useState<IPerson[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectPerson, setSelectPerson] = useState<IPerson>();
-  const [phoneNumber, setPhoneNumber] = useState();
-  const [address, setAddress] = useState("");
+  const [selectedPerson, setSelectedPerson] = useState<IPerson>();
+  const [isLoading, setIsLoading] = useState(false);
+
+  const createPerson = async (data: any) => {
+    return await publicRequest.post("/person/post", {
+      ten_khach_hang: searchQuery,
+      so_dien_thoai: data.so_dien_thoai,
+      dia_chi: data.dia_chi,
+    });
+  };
+  const createInvoice = async (data: any, _id: string) => {
+    return await publicRequest.post("/invoice/post", {
+      khach_hang_id: _id,
+      so_tien_tra: data.so_tien_tra * 1000,
+      hang_hoa: stocks.filter((element) => {
+        return element.ten_mat_hang !== "";
+      }),
+      ngay_mua: buyDate.toISOString(),
+      ghi_chu: data.ghi_chu,
+      tong_tien: totalPrice,
+    });
+  };
+
   const onSubmitHandler = async (data: any) => {
     console.log({
       ...data,
@@ -87,46 +116,56 @@ const index = () => {
       hang_hoa: stocks,
       tong_tien: totalPrice,
       ten_khach_hang: searchQuery,
-      so_dien_thoai: !_.isEmpty(selectPerson)
-        ? phoneNumber
-        : data.so_dien_thoai,
-      dia_chi: !_.isEmpty(selectPerson) ? address : data.dia_chi,
     });
-
+    setIsLoading(true);
+    if (!isValid) {
+      console.log("looix");
+      setIsLoading(false);
+      return;
+    }
     try {
-      if (selectPerson?.ten_khach_hang !== searchQuery) {
-        await publicRequest
-          .post("/person/post", {
-            ten_khach_hang: searchQuery,
-            so_dien_thoai: !_.isEmpty(selectPerson)
-              ? phoneNumber
-              : data.so_dien_thoai,
-            dia_chi: !_.isEmpty(selectPerson) ? address : data.dia_chi,
+      if (selectedPerson?.ten_khach_hang !== searchQuery) {
+        createPerson(data).then((response) =>
+          createInvoice(data, response.data._id).then((res) => {
+            console.log(res.data);
+            setIsLoading(false);
           })
-          .then((response) => console.log(response.data));
+        );
       } else {
         console.log("đã tồn tại");
+        createInvoice(data, selectedPerson._id).then((res) => {
+          console.log(res.data);
+          setIsLoading(false);
+        });
       }
     } catch (error) {
       console.log(error);
     }
   };
   useEffect(() => {
-    setTotalPrice(stocks.reduce((prev, curr) => prev + curr.thanh_tien, 0));
+    setTotalPrice(
+      stocks.reduce(
+        (prev, curr: IStock) =>
+          curr.ten_mat_hang ? prev + (curr?.thanh_tien as number) : prev,
+        0
+      )
+    );
   }, [stocks]);
   useEffect(() => {
     if (searchQuery !== "")
       getPeopleWithSearchQuery(searchQuery).then((res) =>
         setSearchPeople(res.data)
       );
-    if (searchQuery !== selectPerson?.ten_khach_hang) {
-      setSelectPerson({} as IPerson);
+    if (searchQuery !== selectedPerson?.ten_khach_hang) {
+      setSelectedPerson({} as IPerson);
     }
   }, [searchQuery]);
   useEffect(() => {
-    setPhoneNumber(selectPerson?.so_dien_thoai);
-    setAddress(selectPerson?.dia_chi);
-  }, [selectPerson]);
+    if (searchQuery === selectedPerson?.ten_khach_hang) {
+      setValue("so_dien_thoai", selectedPerson.so_dien_thoai);
+      setValue("dia_chi", selectedPerson.dia_chi);
+    }
+  }, [selectedPerson, searchQuery]);
 
   return (
     <MainLayout>
@@ -145,22 +184,22 @@ const index = () => {
             withSearch={true}
             outerVal={searchQuery}
             setOuterVal={setSearchQuery}
-            setSelectVal={setSelectPerson}
+            setSelectVal={setSelectedPerson}
             dropdownData={searchPeople}
           />
           <FormInput
             control={control}
             labelString="Số điện thoại"
             inputId="so_dien_thoai"
-            disabled={searchQuery === selectPerson?.ten_khach_hang}
-            disabledVal={selectPerson?.so_dien_thoai}
+            disabled={searchQuery === selectedPerson?.ten_khach_hang}
+            disabledVal={selectedPerson?.so_dien_thoai}
           />
           <FormInput
             control={control}
             labelString="Địa chỉ"
             inputId="dia_chi"
-            disabled={searchQuery === selectPerson?.ten_khach_hang}
-            disabledVal={selectPerson?.dia_chi}
+            disabled={searchQuery === selectedPerson?.ten_khach_hang}
+            disabledVal={selectedPerson?.dia_chi}
           />
         </div>
         <div className="hoadon-title">Hoá đơn bán hàng</div>
@@ -190,6 +229,7 @@ const index = () => {
             control={control}
             labelString="Số tiền khách trả (Nghìn đồng)"
             inputId="so_tien_tra"
+            error={!!errors.so_tien_tra}
           />
           <FormInput
             control={control}
@@ -209,7 +249,13 @@ const index = () => {
           />
         </div>
         <button type="submit" className="submit-btn">
-          Lưu hoá đơn
+          {!isLoading ? (
+            <>Lưu hoá đơn</>
+          ) : (
+            <>
+              <Spinner />
+            </>
+          )}
         </button>
       </StyledFormContainer>
     </MainLayout>

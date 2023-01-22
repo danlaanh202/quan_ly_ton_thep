@@ -44,7 +44,7 @@ const StockRow = ({
   };
   const handlePrice = (e: ChangeEvent<HTMLInputElement>) => {
     setStock((prev: IStock) => {
-      return { ...prev, don_gia: Number(e.target.value) };
+      return { ...prev, don_gia: Number(e.target.value) * 1000 };
     });
   };
   const handleAmount = (e: ChangeEvent<HTMLInputElement>) => {
@@ -56,14 +56,16 @@ const StockRow = ({
     setStocks((prev: IStock[]) => {
       const prevStocks = [...prev];
       prevStocks[index] = stock;
-      return prevStocks;
+      return prevStocks.filter((element) => {
+        return element.ten_mat_hang !== "";
+      });
     });
   }, [stock]);
   useEffect(() => {
     setStock((prev: IStock) => {
       return {
         ...prev,
-        thanh_tien: prev.so_luong * prev.don_gia * 1000,
+        thanh_tien: prev.so_luong * prev.don_gia,
       };
     });
   }, [stock.don_gia, stock.so_luong]);

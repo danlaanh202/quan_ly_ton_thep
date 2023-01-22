@@ -10,3 +10,18 @@ export const getPeopleWithSearchQuery = async (searchQuery: string) => {
     },
   });
 };
+export const getInvoices = async () => {
+  return await publicRequest.get("/invoice/get");
+};
+
+export const getInvoicesById = async (id: string) => {
+  return await publicRequest.get("/invoice/get_by_person_id", {
+    params: {
+      khach_hang_id: id,
+    },
+  });
+};
+
+export const getPeople = async () => {
+  return await publicRequest.get("/person/get");
+};

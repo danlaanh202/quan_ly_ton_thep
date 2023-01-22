@@ -16,7 +16,7 @@ class PersonController {
       return res.status(500).json(error);
     }
   }
-  async getPeople(req, res) {
+  async getPeopleWithSearchQuery(req, res) {
     try {
       const findedPeople = await PersonModel.find({
         ten_khach_hang: {
@@ -25,6 +25,14 @@ class PersonController {
         },
       });
       return res.status(200).json(findedPeople);
+    } catch (error) {
+      return res.status(500).json(error);
+    }
+  }
+  async getPeople(req, res) {
+    try {
+      const people = await PersonModel.find({});
+      return res.status(200).json(people);
     } catch (error) {
       return res.status(500).json(error);
     }

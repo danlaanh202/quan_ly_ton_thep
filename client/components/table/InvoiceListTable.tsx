@@ -1,12 +1,12 @@
-import React, { useState } from "react";
+import React, { Dispatch, SetStateAction, useState } from "react";
 import { Form, Input, InputNumber, Popconfirm, Table, Typography } from "antd";
 import { IInvoiceVar, IStock } from "@/types";
 import styled from "styled-components";
 import InvoiceItemsTable from "./InvoiceItemsTable";
 import { easyReadMoney } from "@/utils/convert";
-import { useQuery } from "react-query";
-import { publicRequest } from "@/utils/callApi";
+
 import { format } from "date-fns";
+import _ from "lodash";
 
 interface Item extends IInvoiceVar {
   key: React.Key;
@@ -56,9 +56,16 @@ const EditableCell: React.FC<EditableCellProps> = ({
   );
 };
 
-const InvoiceListTable: React.FC = () => {
+const InvoiceListTable = ({
+  data,
+  setData,
+  isChild = false,
+}: {
+  data: IInvoiceVar[];
+  setData: Dispatch<SetStateAction<IInvoiceVar[]>>;
+  isChild?: boolean;
+}) => {
   const [form] = Form.useForm();
-  // const [data, setData] = useState(originData);
   const [editingKey, setEditingKey] = useState("");
   const isEditing = (record: Item) => record.key === editingKey;
   const edit = (record: Partial<Item> & { key: React.Key }) => {
@@ -73,7 +80,6 @@ const InvoiceListTable: React.FC = () => {
   const save = async (key: React.Key) => {
     try {
       const row = (await form.validateFields()) as Item;
-
       const newData = [...data];
       const index = newData.findIndex((item) => key === item.key);
       if (index > -1) {
@@ -82,11 +88,11 @@ const InvoiceListTable: React.FC = () => {
           ...item,
           ...row,
         });
-        // setData(newData);
+        setData(newData);
         setEditingKey("");
       } else {
         newData.push(row);
-        // setData(newData);
+        setData(newData);
         setEditingKey("");
       }
     } catch (errInfo) {
@@ -94,8 +100,8 @@ const InvoiceListTable: React.FC = () => {
     }
   };
   const handleDelete = (key: React.Key) => {
-    const newData = data.filter((item) => item.key !== key);
-    // setData(newData);
+    const newData = data.filter((item) => item._id !== key);
+    setData(newData);
   };
   const columns = [
     {
@@ -103,28 +109,30 @@ const InvoiceListTable: React.FC = () => {
       dataIndex: ["khach_hang", "ten_khach_hang"],
       width: "300px",
       editable: true,
-      // render: (_: any, record: Item) => record.khach_hang.ten_khach_hang,
     },
-    {
-      title: "Số điện thoại",
-      dataIndex: ["khach_hang", "so_dien_thoai"],
-      width: "300px",
-      editable: true,
-      // render: (_: any, record: Item) => record.khach_hang.so_dien_thoai,
-    },
-    {
-      title: "Địa chỉ",
-      dataIndex: ["khach_hang", "dia_chi"],
-      width: "500px",
-      editable: true,
-      // render: (_: any, record: Item) => record.khach_hang.dia_chi,
-    },
+    isChild
+      ? {}
+      : {
+          title: "Số điện thoại",
+          dataIndex: ["khach_hang", "so_dien_thoai"],
+          width: "300px",
+          editable: true,
+        },
+    isChild
+      ? {}
+      : {
+          title: "Địa chỉ",
+          dataIndex: ["khach_hang", "dia_chi"],
+          width: "500px",
+          editable: true,
+        },
     {
       title: "Tổng hoá đơn",
       dataIndex: "tong_tien",
       width: "300px",
       // editable: true,
-      render: (_: any, record: Item) => easyReadMoney(record.tong_tien),
+      render: (_: any, record: Item) =>
+        easyReadMoney(record.tong_tien as number),
     },
     {
       title: "Số tiền trả",
@@ -133,43 +141,54 @@ const InvoiceListTable: React.FC = () => {
       editable: true,
       render: (_: any, record: Item) => easyReadMoney(record.so_tien_tra),
     },
-    {
-      title: "Hành Động",
-      dataIndex: "operation",
-      width: "300px",
-      render: (_: any, record: Item) => {
-        const editable = isEditing(record);
-        return editable ? (
-          <span>
-            <Typography.Link
-              onClick={() => save(record.key)}
-              style={{ marginRight: 8 }}
-            >
-              Lưu lại
-            </Typography.Link>
-            <Popconfirm title="Bạn muốn huỷ?" onConfirm={cancel}>
-              <a>Huỷ</a>
-            </Popconfirm>
-          </span>
-        ) : (
-          <>
-            <Typography.Link
-              disabled={editingKey !== ""}
-              onClick={() => edit(record)}
-            >
-              Sửa
-            </Typography.Link>
-            <Popconfirm
-              title="Chắc chắn xoá?"
-              onConfirm={() => handleDelete(record.key)}
-            >
-              <a style={{ color: "red", marginLeft: "8px" }}>Xoá</a>
-            </Popconfirm>
-          </>
-        );
-      },
-    },
-  ];
+    isChild
+      ? {}
+      : {
+          title: "Hành Động",
+          dataIndex: "operation",
+          width: "300px",
+          render: (_: any, record: Item) => {
+            const editable = isEditing(record);
+            return editable ? (
+              <span>
+                <Typography.Link
+                  onClick={() => save(record.key)}
+                  style={{ marginRight: 8 }}
+                >
+                  Lưu lại
+                </Typography.Link>
+                <Popconfirm title="Bạn muốn huỷ?" onConfirm={cancel}>
+                  <a>Huỷ</a>
+                </Popconfirm>
+              </span>
+            ) : (
+              <>
+                <Typography.Link
+                  disabled={editingKey !== ""}
+                  onClick={() => edit(record)}
+                >
+                  Sửa
+                </Typography.Link>
+                <Popconfirm
+                  title="Chắc chắn xoá?"
+                  onConfirm={() => handleDelete(record.key)}
+                >
+                  <a style={{ color: "red", marginLeft: "8px" }}>Xoá</a>
+                </Popconfirm>
+              </>
+            );
+          },
+        },
+    isChild
+      ? {
+          title: "Ngày tạo hoá đơn",
+          dataIndex: "created_at",
+          width: "300px",
+          render: (_: any, record: Item) =>
+            format(new Date(record.created_at as string), "dd/MM/yyyy"),
+        }
+      : {},
+  ].filter((elem) => !_.isEmpty(elem));
 
   const mergedColumns = columns.map((col) => {
     if (!col.editable) {
@@ -186,14 +205,7 @@ const InvoiceListTable: React.FC = () => {
       }),
     };
   });
-  const { isLoading, isError, isSuccess, data } = useQuery(
-    "get_invoices",
-    async () =>
-      await publicRequest.get("/invoice/get").then((res) => {
-        console.log(res.data);
-        return res.data;
-      })
-  );
+
   return (
     <Form form={form} component={false}>
       <Table
@@ -203,7 +215,7 @@ const InvoiceListTable: React.FC = () => {
           },
         }}
         bordered
-        dataSource={data}
+        dataSource={data as Item[]}
         columns={mergedColumns}
         rowClassName="editable-row"
         pagination={{
@@ -213,6 +225,12 @@ const InvoiceListTable: React.FC = () => {
         expandable={{
           expandedRowRender: (record) => (
             <StyledExpandableContainer>
+              <div
+                className="exp-title"
+                style={{ fontWeight: 600, fontSize: "16px" }}
+              >
+                Danh sách hàng hoá{" "}
+              </div>
               <InvoiceItemsTable originData={record.hang_hoa as IStock[]} />
               <div className="exp-item">
                 <div className="exp-item-title">Ngày mua:</div>
@@ -226,7 +244,7 @@ const InvoiceListTable: React.FC = () => {
               </div>
             </StyledExpandableContainer>
           ),
-          rowExpandable: (record) => record.name !== "Not Expandable",
+          // rowExpandable: (record) => record.name !== "Not Expandable",
         }}
       />
     </Form>

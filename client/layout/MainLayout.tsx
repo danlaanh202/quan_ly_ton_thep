@@ -1,6 +1,9 @@
 import {
   FileAddOutlined,
+  FileSearchOutlined,
   HomeOutlined,
+  MoneyCollectOutlined,
+  SearchOutlined,
   UnorderedListOutlined,
 } from "@ant-design/icons";
 import Link from "next/link";
@@ -90,8 +93,14 @@ const MainLayout = ({ children }: { children?: ReactNode }) => {
       setActiveId(1);
     } else if (router.asPath.split("/").includes("danh_sach_hoa_don")) {
       setActiveId(2);
-    } else if (router.asPath.split("/").includes("danh_sach_no")) {
+    } else if (router.asPath.split("/").includes("danh_sach_khach_hang")) {
       setActiveId(3);
+    } else if (router.asPath.split("/").includes("tim_kiem_hoa_don")) {
+      setActiveId(4);
+    } else if (router.asPath.split("/").includes("tim_kiem_khach_hang")) {
+      setActiveId(5);
+    } else if (router.asPath.split("/").includes("tra_no")) {
+      setActiveId(6);
     }
   }, [router]);
   return (
@@ -123,12 +132,36 @@ const MainLayout = ({ children }: { children?: ReactNode }) => {
                 <span className="content">Danh sách hoá đơn</span>
               </li>
             </Link>
-            <Link href="/danh_sach_no">
+            <Link href="/danh_sach_khach_hang">
               <li className={`list-item ${activeId === 3 && "active"}`}>
                 <div className="icon">
                   <UnorderedListOutlined />
                 </div>
-                <span className="content">Danh sách nợ</span>
+                <span className="content">Danh sách khách hàng</span>
+              </li>
+            </Link>
+            <Link href="/tim_kiem_hoa_don">
+              <li className={`list-item ${activeId === 4 && "active"}`}>
+                <div className="icon">
+                  <FileSearchOutlined />
+                </div>
+                <span className="content">Tìm kiếm hoá đơn</span>
+              </li>
+            </Link>
+            <Link href="/tim_kiem_khach_hang">
+              <li className={`list-item ${activeId === 5 && "active"}`}>
+                <div className="icon">
+                  <SearchOutlined />
+                </div>
+                <span className="content">Tìm kiếm khách hàng</span>
+              </li>
+            </Link>
+            <Link href="/tra_no">
+              <li className={`list-item ${activeId === 6 && "active"}`}>
+                <div className="icon">
+                  <MoneyCollectOutlined />
+                </div>
+                <span className="content">Trả nợ</span>
               </li>
             </Link>
           </ul>
